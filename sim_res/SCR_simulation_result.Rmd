@@ -1,0 +1,106 @@
+---
+title: "SCR Coverage Simulation Result"
+author: Katrina Sha
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+
+# Simulation set-up
+```{r include=FALSE}
+library(dplyr)
+```
+
+```{r echo=FALSE}
+n_rep <- 100
+n <- 10
+conf_level <- 0.95
+SCR_type <- 'Fix t'
+grid_t <- '[0,1], 21 grids'
+grid_x <- '[-10, 10] 4000 grids'
+estimating_method <- 'CV'
+basis_used <- 'Legendre'
+
+info_df <- data.frame(n_rep, n, conf_level, SCR_type, grid_t, grid_x, estimating_method, basis_used, basis_used)
+colnames(info_df) <- c('Number of replications', 'Sample size', 'Confidence level', 'SCR estimated along', 'Grid t', 'Grid x', 'Criteria for choosing number of basis', 'Basis used for t', 'Basis used for x')
+knitr::kable(info_df, caption = 'Simulation information')
+```
+
+# Data generation function
+$$X_i = m(t_i, X_{i-1}) + \sigma(t_i, X_{i-1})\epsilon_i$$
+where 
+$$m(t,x) = (1+x^2)^{-4} + sin(2\pi t)\exp(-x^2)$$
+$$\sigma(t,x) = 1.5\exp(-x^2/2)(2+\sin(2\pi t))$$
+
+and 3 models for $\epsilon_i$ are constructed by $a_1(i/n) = 0.3$, $a_2(i/n) = 0.3 \sin(2\pi i/n)$
+
+$$\epsilon_i = \sum_{j=1}^2 a_j(j/n) \epsilon_{i-j} + \eta_i, \quad \eta_i \sim_{iid} N(0,1) \tag{Time-varying AR(2)}$$
+$$\epsilon_i = \begin{cases}
+a_1(i/n)\epsilon_{i-1} + \eta_i, \quad \eta_i \sim_{iid} N(0,1), &\epsilon_i \ge 0 \\
+a_2(i/n)\epsilon_{i-1} + \eta_i, \quad \eta_i \sim_{iid} N(0,1), & \epsilon_i < 0
+\end{cases} \tag{Self-exciting threshold auto-regressive (SETAR)}$$
+
+$$
+\epsilon_i = (a_1(i/n)\eta_{i-1} + a_2(i/n))\epsilon_{i-1} + \eta_i, \quad \eta_i \sim_{iid} N(0,1) \tag{Bilinear}
+$$
+
+# Result
+```{r echo=FALSE}
+res <- readRDS('~/Desktop/UofT/STA496 Time Series/sta496-coding/sim_res/n=10n_reps=100m1eps=tvAR2-SETAR-bilinear.rds')
+tvar2 <- res[[1]]
+setar <- res[[2]]
+bilinear <- res[[3]]
+df <- data.frame(tvar2, setar, bilinear)
+colnames(df) <- c('Time-varying AR2', 'SETAR', 'Bilinear')
+rownames(df) <- '95% SCR coverage'
+
+knitr::kable(df)
+```
+
+# Implementation
+```{r eval=FALSE}
+n_options <- 10 # c(500, 800)
+eps_options <- c('tvAR2', 'SETAR', 'bilinear')
+m_case = 1
+
+n_rep = 100 #c(500, 2000, 5000)
+
+for (n in n_options) {
+  res <- list()
+  
+  for (eps in eps_options) {
+    cat('Running case n=', n, eps, '\n')
+    cov <- auto_SCR_coverage(n_rep = n_rep, n=n, f_true=m2, delta=1, m_case = m_case, eps_case = eps)
+    res[paste0('n=', n,'_', eps)] <- cov
+  }
+}
+
+auto_SCR_coverage <- function(n_rep = 10, n = 100, t_grid = seq(0, 1, length.out = 21),
+                              c = 10, d = 10, b_time = 'Legen', b_timese = 'Legen',
+                              mp_type = 'algeb', type = 'fixt', ops = 'CV', per=0.2,
+                              r=1, s=1, upper=10, f_true, delta=0, m_case, eps_case = 'tvAR2') {
+  covered <- logical(n_rep)
+  for (s in (1:n_rep)) {
+    cat('Running replication s=', s, ' out of ', n_rep, '\n')
+    ok_all_t <- TRUE
+    set.seed(s)
+    ts <- sim_x(n, delta, m_case = m_case, eps_case = eps_case)
+    for (t0 in t_grid[2:(length(t_grid)-1)]) {
+      res <- auto.SCR(ts, c=10, d=10, b_time = 'Legen', b_timese = 'Legen', 
+                      mp_type='algeb', type = 'fixt', ops = 'CV', t0, per = 0.2)
+      df <- res[[1]]
+      
+      band <- extract_band(df)
+      
+      m_true <- f_true(t=rep(t0, length(band$x)), x=band$x, delta=delta)
+      
+      covered_t <- all(m_true >= band$lower & m_true <= band$upper)
+      if (!covered_t) {ok_all_t <- FALSE; break}
+    }
+    covered[s] <- ok_all_t
+    cat('covered=', covered, '\n')
+    
+  }
+  return(mean(covered))
+  
+}
+```
