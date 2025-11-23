@@ -63,5 +63,15 @@ Legendre_basis <- function(c, x){
   return(unlist(poly_val(aux_li, x)))
 }
 
+b <- Legendre_basis(3, c(0.1, 0.2))
+df <- data.frame(x = rep(c(0.1, 0.2), each = 3),
+                 basis = c(1, 1, 2, 2, 3, 3),
+                 value = b)
+library(ggplot2)
 
-
+ggplot(df, aes(x = x, y = value, color = factor(basis))) +
+  geom_line() +
+  labs(title = "Legendre Basis Functions",
+       x = "x",
+       y = "Basis Value",
+       color = "Basis")

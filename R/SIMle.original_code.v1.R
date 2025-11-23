@@ -1,5 +1,5 @@
 
-source(paste(getwd(), "/R/Mapping_func.v1.R", sep = ""))
+source(paste(getwd(), "/Mapping_func.v1.R", sep = ""))
 
 
 # Adding Cspline and wavelets

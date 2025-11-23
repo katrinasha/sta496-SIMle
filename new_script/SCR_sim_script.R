@@ -107,6 +107,9 @@ sim_x <- function(n, delta=1, m_case, eps_case, x0=0, burn=500L) {
 # n=500
 # m_case=1
 # eps_case='tvAR2'
+# set.seed(1)
+# test_data <- sim_x(n, m_case = m_case, eps_case = eps_case)
+# write.csv(test_data, file = 'method/test_data.csv', row.names = FALSE)
 # plot(sim_x(n, m_case = m_case, eps_case = eps_case), type='l')
 
 ################### Verify SCR coverage #####################
