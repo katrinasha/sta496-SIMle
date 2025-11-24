@@ -34,7 +34,7 @@ legendre_coef(5)
 
 legendre_basis <- function(c, z, type = c('t','x')) {
     # c: number of basis functions (order = c-1)
-    # x: input value in [-1,1]
+    # z: input value in [0,1] if represents time t; in R if represents covariate x
     coef_list <- legendre_coef(c)
 
     # map x to [-1,1]

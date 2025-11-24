@@ -45,21 +45,21 @@ estimate_beta <- function(data, outcome, covariates, b_time, b_timese, c, d) {
     # OLS estimate
     beta_hat <- solve(t(W) %*% W, tol = 1e-40) %*% t(W) %*% Y
     esti <- W %*% beta_hat
-    return(list(beta_hat = beta_hat, esti = esti))
+    return(list(beta_hat = beta_hat, esti = esti, W = W, w = x_comp))
 }
 
 
 #esti <- estimate_beta(data, outcome = 'Y', covariates = 'X', b_time = NULL, b_timese = NULL, c = 5, d = 5)
-# true = m1(t = seq(0, 1, length.out = nrow(data)), x = data$X, delta = 1)
-# data1 = data.frame(Y = true, t = data$t, X = data$X) %>% data.table()
+true = m1(t = seq(0, 1, length.out = nrow(data)), x = data$X, delta = 1)
+data1 = data.frame(Y = true, t = data$t, X = data$X) %>% data.table()
 
-# esti <- estimate_beta(data1, outcome = 'Y', covariates = 'X', b_time = NULL, b_timese = NULL, c = 5, d = 5)
-# df <- data.frame(esti = esti$esti, true = true, t = (1:nrow(data))/nrow(data), x = data$X) %>%
-#     data.table()
-# ggplot(df, aes(x = true, y = esti)) +
-#     geom_point() +
-#     geom_abline(slope = 1, intercept = 0, color = 'red') +
-#     labs(title = "Estimated m(t,x) vs True m(t,x)", x = "True m(t,x)", y = "Estimated m(t,x)")
+esti <- estimate_beta(data1, outcome = 'Y', covariates = 'X', b_time = NULL, b_timese = NULL, c = 10, d = 10)
+df <- data.frame(esti = esti$esti, true = true, t = (1:nrow(data))/nrow(data), x = data$X) %>%
+    data.table()
+ggplot(df, aes(x = true, y = esti)) +
+    geom_point() +
+    geom_abline(slope = 1, intercept = 0, color = 'red') +
+    labs(title = "Estimated m(t,x) vs True m(t,x)", x = "True m(t,x)", y = "Estimated m(t,x)")
 # +
 #     geom_point(aes(y = true, color = "true")) +
 #     geom_point(aes(y = esti, color = "esti")) +

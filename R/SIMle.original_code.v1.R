@@ -996,6 +996,9 @@ SCR_fix_t <- function(ts, m, t, c, d, b_time, b_timese, mp_type, r=1, s = 1, n_p
   n_esti = n-r
   basis_x = matrix(nrow = n-r, ncol = 1) 
   aux_phi_x = matrix(ncol = d_tri)
+#> aux_phi_x
+#      [,1] [,2] [,3] [,4] [,5]
+# [1,]   NA   NA   NA   NA   NA
   
   basis_t = matrix(nrow = n_esti) 
   aux_bt  = matrix(nrow = n_esti)
@@ -1011,7 +1014,7 @@ SCR_fix_t <- function(ts, m, t, c, d, b_time, b_timese, mp_type, r=1, s = 1, n_p
     aux_phi_x = aux_phi_x[-1, ]
     aux_phi_x = as.matrix(aux_phi_x, ncol = d_tri)
     basis_x = cbind(basis_x, aux_phi_x)
-    aux_phi_x = matrix(ncol = d_tri)
+    # aux_phi_x = matrix(ncol = d_tri)
   }
   
   basis_x = matrix(basis_x[,-1], ncol = r*d_tri)

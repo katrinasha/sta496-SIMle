@@ -75,3 +75,4 @@ ggplot(df, aes(x = x, y = value, color = factor(basis))) +
        x = "x",
        y = "Basis Value",
        color = "Basis")
+legendre_coeff(4)
