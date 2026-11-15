@@ -4,7 +4,6 @@ library(tidyr)
 library(dplyr)
 library(ggplot2)
 library(SIMle)
-setwd('~/Desktop/UofT/STA496 Time Series/sta496-coding')
 
 data <- read.csv('hkepd_dat.csv') %>% data.table()
 

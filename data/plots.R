@@ -1,7 +1,7 @@
 library(dplyr)
 library(ggplot2)
 library(data.table)
-data <- read.csv("/Users/siyuansha/Documents/GitHub/sta496-SIMle/hkepd_dat.csv") %>%data.table()
+data <- read.csv("~/Documents/GitHub/sta496-SIMle/hkepd_dat.csv") %>%data.table()
 head(data)
 
 df <- data %>%
