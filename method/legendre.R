@@ -32,19 +32,23 @@ legendre_coef <- function(n){
 }
 legendre_coef(5)
 
-legendre_basis <- function(c, z, type = c('t','x')) {
+legendre_basis <- function(c, z, type = NA) {
     # c: number of basis functions (order = c-1)
     # z: input value in [0,1] if represents time t; in R if represents covariate x
+    # type = c('t', 'x')
     coef_list <- legendre_coef(c)
 
     # map x to [-1,1]
-    if (type == 't') {
-        x_mapped <- map_t_to_legendre(z)
-    } else if (type == 'x') {
-        x_mapped <- map_x_to_legendre(z)
+    if (!is.na(type)) {
+        if (type == "t") {
+            x_mapped <- map_t_to_legendre(z)
+        } else if (type == "x") {
+            x_mapped <- map_x_to_legendre(z)
+        }
     } else {
-        stop("Invalid type. Must be 't' or 'x'.")
+        x_mapped <- z
     }
+    
 
     # compute each basis function at x_mapped
     basis_values <- list(c)
@@ -79,13 +83,13 @@ map_x_to_legendre <- function(x, s=1) {
 }
 
 legendre_basis(3, c(0, 0.1, 1), type = 't')
-legendre_basis(6, seq(0, 1, by=0.01), type = 't') %>%
+legendre_basis(5, seq(-1, 1, by=0.01), type =NA) %>%
     ggplot(aes(x = variable, y = value, color = as.factor(basis_order))) +
     geom_line() +
     labs(color = "Basis Order") +
     ggtitle("Legendre Basis Functions")
     
-legendre_basis(6, seq(-3, 3, by=0.1), type = 'x') %>%
+legendre_basis(5, seq(-1, 1, by=0.1), type = NA) %>%
     ggplot(aes(x = variable, y = value, color = as.factor(basis_order))) +
     geom_line() +
     labs(color = "Basis Order") +

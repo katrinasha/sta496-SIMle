@@ -6,7 +6,7 @@ data <- data.frame(
 ) %>%
     data.table()
 data <- data[-1,] # first row has NA for x_{t-1}
-
+m1 <- function(t, x, delta) (1 + x^2)^(-4) + delta * sin(2*pi*t) * exp(-x^2)
 
 source('method/legendre.R')
 # Estimate OLS regression coefficient in 
@@ -45,16 +45,19 @@ estimate_beta <- function(data, outcome, covariates, b_time, b_timese, c, d) {
     # OLS estimate
     beta_hat <- solve(t(W) %*% W, tol = 1e-40) %*% t(W) %*% Y
     esti <- W %*% beta_hat
-    return(list(beta_hat = beta_hat, esti = esti, W = W, w = x_comp))
+    return(list(beta_hat = beta_hat, esti = esti, W = cbind(W0, W1), w = x_comp))
 }
 
 
 #esti <- estimate_beta(data, outcome = 'Y', covariates = 'X', b_time = NULL, b_timese = NULL, c = 5, d = 5)
-true = m1(t = seq(0, 1, length.out = nrow(data)), x = data$X, delta = 1)
-data1 = data.frame(Y = true, t = data$t, X = data$X) %>% data.table()
+# true = m1(t = seq(0, 1, length.out = nrow(data)), x = x, delta = 1)
+# data1 = data.frame(Y = true, t = data$t, X = x) %>% data.table()
 
-esti <- estimate_beta(data1, outcome = 'Y', covariates = 'X', b_time = NULL, b_timese = NULL, c = 10, d = 10)
-df <- data.frame(esti = esti$esti, true = true, t = (1:nrow(data))/nrow(data), x = data$X) %>%
+true=m_true(t=rep(0, n_point), x=band$x, delta=1)
+data1 = data.frame(Y = true[2:500], X = x[1:499], t=seq(0,1,length.out=499))
+
+esti <- estimate_beta(data1, outcome = 'Y', covariates = 'X', b_time = NULL, b_timese = NULL, c = 15, d = 15)
+df <- data.frame(esti = esti$esti, true = true[2:500], t = seq(0,1,length.out=499), x = data$X) %>%
     data.table()
 ggplot(df, aes(x = true, y = esti)) +
     geom_point() +

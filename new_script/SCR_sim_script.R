@@ -1,10 +1,12 @@
 library(SIMle)
+
 library(ggplot2)
 library(dplyr)
 library(data.table)
 library(tidyr)
 library(parallel)
 library(snow)
+# source('method/SIMle.original_copy.R')
 
 ################### Error functions #####################
 # tvAR2 helpers
@@ -55,8 +57,10 @@ errors <- list(
 )
 
 ################### Main functions: m and sigma #####################
-m1 <- function(t, x, delta) (1 + x^2)^(-4) + delta * sin(2*pi*t) * exp(-x^2)
-s1 <- function(t, x)        1.5 * exp(-x^2/2) * (2 + sin(2*pi*t))
+# m1 <- function(t, x, delta) (1 + x^2)^(-4) + delta * sin(2*pi*t) * exp(-x^2)
+m1 <- function(t, x, delta) 0
+s1<- function(t,x) 1
+# s1 <- function(t, x)        1.5 * exp(-x^2/2) * (2 + sin(2*pi*t))
 case1 <- list(m = m1, s = s1)
 
 m2 <- function(t, x, delta) (delta * sin(2*pi*t) + 1) * exp(-x^2/2)
@@ -95,6 +99,7 @@ sim_x <- function(n, delta=1, m_case, eps_case, x0=0, burn=500L) {
         m_val <- m_fun(u, x_prev, delta)
         s_var <- s_fun(u, x_prev)
         x_t <- m_val + s_var * eps[t]
+        # x_t <- m_val
         data_used <- rbind(data_used, data.frame(t=u, x = x_t, x_prev=x_prev, eps=eps[t]))
         X[t] <- x_t
         x_prev <- x_t
@@ -193,26 +198,50 @@ m_case = 1
 eps_case = 'tvAR2'
 
 # Issue: low empirical coverage
-auto_SCR_coverage(n_rep = n_rep, n = n, c = c, d = d, delta = delta, b_time = b_time, b_timese = b_timese, 
+auto_SCR_coverage(n_rep = 10, n = n, c = c, d = d, delta = delta, b_time = b_time, b_timese = b_timese, 
                  mp_type = mp_type, m_case = m_case, eps_case = eps_case)
 
 # Observed that SCR often fails to cover true m around x=0
 #   See this issue for fixed t0=0 below
+c = 5
+d = 5
+
 set.seed(2)
-X <- sim_x(n, delta = delta, m_case = m_case, eps_case = eps_case, x0=0)
-res_t <- auto.SCR(X, c=c, d=d, b_time=b_time, b_timese=b_timese,
-                mp_type=mp_type, type='fixt', ops='CV', fix_num = 0, per=0.1)
+X <- sim_x(n, delta = delta, m_case = m_case, eps_case = eps_case, x0 = 0)
+X <- read.csv('/Users/siyuansha/Documents/GitHub/sta496-SIMle/method/test_data.csv') %>% pull(x)
+head(X); plot(X)
+# res_t <- auto.SCR(X, c=c, d=d, b_time=b_time, b_timese=b_timese, m=m,
+#             mp_type=mp_type, type='fixt', ops='CV', fix_num = 0, per=0.1)
+# timese = X
+t = 0
+m = "MV"
+r = 1
+s = 1
+n_point = 2000
+upper = -1
+m_true <- model_cases[[m_case]]$m
+m_vals <- m_true(t = rep(t, 2000), x = seq(-10, 10, length.out = 2000), delta = delta)
+
+esti = fix_t_esti(timese = X, c = c, d = d, t = 0, b_time = "Legen", b_timese = "Legen", mp_type = "algeb", upper=upper)
+width = SCR_fix_t(X, m = m, t = t, c = c, d = d, b_time = b_time, b_timese = b_timese, mp_type = mp_type, r = r, s = s, n_point = n_point, upper = upper)[[1]]
+plot(esti[[1]], ylim = c(-10, 10));matlines(m_vals, col='red');matlines(esti[[1]] - width, col = "blue");matlines(esti[[1]] + width, col = "blue")
+
+# X=x
+res_t <- fix_t_scr(X, t = 0.5, c = c, d = d, m = m, b_time = b_time, b_timese = b_timese, mp_type = mp_type)
+res_t <- auto.SCR(X, c=c, d=d, b_time=b_time, b_timese=b_timese, m=m,
+            mp_type=mp_type, type='fixt', ops='CV', fix_num = t, per=0.1)
+
 df <- res_t[[1]]
 band <- extract_band(df)
-m_true <- model_cases[[m_case]]$m
-m_vals <- m_true(t = rep(0, length(band$x)), x = band$x, delta = delta)
+# head(band$lower);head(band$upper);head(band$esti)
+
 ggplot() +
     geom_line(aes(x = band$x, y = band$esti, color = 'Estimated')) +
     geom_line(aes(x = band$x, y = band$upper, color = 'Confidence region'), linetype = 'dashed') +
     geom_line(aes(x = band$x, y = band$lower, color = 'Confidence region'), linetype = 'dashed') +
     geom_line(aes(x = band$x, y = m_vals, color = 'True m')) +
     scale_color_manual(values = c('Estimated' = 'blue', 'Confidence region' = 'red', "True m" = 'green')) +
-    ggtitle(paste0('t0=0, c=', c, 'd=', d, 'mp_type=', mp_type)) +
+    ggtitle(paste0('t0=', t, 'c=', c, 'd=', d, 'mp_type=', mp_type)) +
     ylab('m(t0, x) and SCR') +
     theme(legend.position = 'top') + 
     labs(title = paste0('t0=0, c=', c, 'd=', d, 'mp_type=', mp_type), 
