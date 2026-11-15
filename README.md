@@ -7,7 +7,7 @@ Fall 2025 · Department of Statistical Sciences, University of Toronto
 
 This repository documents my study of the simultaneous sieve inference method (SIMle) proposed in [Simultaneous Sieve Estimation and Inference for Time-Varying Nonlinear Time Series Regression](https://arxiv.org/pdf/2506.23069), as part of an independent reading course supervised by Dr. Zhou Zhou at the University of Toronto.
 
-It includes my implementation of SIMle, simulation scripts for reproducing the studies and results in the paper, and code for processing the Hong Kong respiratory disease dataset. It also contains my final report and the slides I presented at the department's Reading Course Presentations.
+It includes my implementation of SIMle, simulation scripts for reproducing the studies and results in the paper, and code for processing the Hong Kong respiratory disease dataset. It also contains my final report and the slides I presented at the department's [Reading Course Presentations](https://www.statistics.utoronto.ca/Undergraduate-Research#fall25-11).
 
 ## Repository Structure
 
